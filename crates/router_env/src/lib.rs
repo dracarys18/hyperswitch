@@ -26,6 +26,8 @@ pub use tracing;
 #[cfg(feature = "actix_web")]
 pub use tracing_actix_web;
 pub use tracing_appender;
+pub use tracing_opentelemetry;
+pub use tracing_subscriber;
 
 #[doc(inline)]
 pub use self::env::*;

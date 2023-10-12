@@ -90,6 +90,11 @@ openssl = "0.10.55"
 x509-parser = "0.15.0"
 sha-1 = { version = "0.9"}
 digest = "0.9"
+opentelemetry = { version = "0.20.0", features = ["rt-tokio-current-thread","trace"] }
+tracing-opentelemetry = "0.21.0"
+actix-web-opentelemetry = { version = "0.15.0", features = ["metrics"] }
+opentelemetry-jaeger = { version = "0.19.0", features = ["rt-tokio-current-thread", "rt-tokio"] }
+pprof = { version = "0.13.0", features = ["flamegraph", "protobuf-codec"] }
 
 # First party crates
 api_models = { version = "0.1.0", path = "../api_models", features = ["errors"] }

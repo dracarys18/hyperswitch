@@ -21,12 +21,15 @@ pub mod services;
 pub mod types;
 pub mod utils;
 
+use std::io::Write;
+
 use actix_web::{
     body::MessageBody,
     dev::{Server, ServerHandle, ServiceFactory, ServiceRequest},
     middleware::ErrorHandlers,
 };
 use http::StatusCode;
+use pprof::protos::Message;
 use routes::AppState;
 use storage_impl::errors::ApplicationResult;
 use tokio::sync::{mpsc, oneshot};
@@ -74,6 +77,50 @@ pub mod pii {
     pub(crate) use common_utils::pii::Email;
     #[doc(inline)]
     pub use masking::*;
+}
+
+use actix_web_opentelemetry::{RequestMetrics, RequestTracing};
+use opentelemetry::{self, global};
+use router_env::{
+    tracing,
+    tracing_subscriber::{self, prelude::*},
+};
+
+#[derive(Debug, Clone)]
+pub struct OpenTelemetryStack {
+    request_metrics: RequestMetrics,
+}
+
+impl Default for OpenTelemetryStack {
+    fn default() -> Self {
+        let app_name = std::env::var("CARGO_BIN_NAME").unwrap_or("demo".to_string());
+
+        global::set_text_map_propagator(opentelemetry_jaeger::Propagator::new());
+
+        #[allow(clippy::expect_used)]
+        let tracer = opentelemetry_jaeger::new_agent_pipeline()
+            .with_endpoint(std::env::var("JAEGER_ENDPOINT").unwrap_or("localhost:6831".to_string()))
+            .with_service_name(app_name.clone())
+            //.with_auto_split_batch(true)
+            .install_batch(opentelemetry::runtime::Tokio)
+            .expect("Failed to install OpenTelemetry tracer.");
+
+        let telemetry = tracing_opentelemetry::layer().with_tracer(tracer);
+
+        #[allow(clippy::expect_used)]
+        let subscriber = tracing_subscriber::Registry::default().with(telemetry);
+        tracing::subscriber::set_global_default(subscriber)
+            .expect("Failed to install `tracing` subscriber.");
+
+        let request_metrics = RequestMetrics::default();
+        Self { request_metrics }
+    }
+}
+
+impl OpenTelemetryStack {
+    pub fn metrics(&self) -> RequestMetrics {
+        self.request_metrics.clone()
+    }
 }
 
 pub fn mk_app(
@@ -237,6 +284,34 @@ pub fn get_application_builder(
         .content_type_required(true)
         .error_handler(utils::error_parser::custom_json_error_handler);
 
+    let _prof_guard = pprof::ProfilerGuardBuilder::default()
+        .frequency(1000)
+        .blocklist(&["libc", "libgcc", "pthread", "vdso"])
+        .build()
+        .unwrap();
+
+    let now = common_utils::date_time::now();
+
+    let file_path = std::env::var("FILE_PATH").unwrap_or("/mnt/reports".to_string());
+
+    if let Ok(report) = _prof_guard.report().build() {
+        let file = std::fs::File::create(format!("{file_path}/flamegraph_{now}.svg")).unwrap();
+        let mut options = pprof::flamegraph::Options::default();
+        options.image_width = Some(2500);
+        report.flamegraph_with_options(file, &mut options).unwrap();
+    };
+
+    if let Ok(report) = _prof_guard.report().build() {
+        let mut file = std::fs::File::create(format!("{file_path}/profile_{now}.pb")).unwrap();
+        let profile = report.pprof().unwrap();
+
+        let mut content = Vec::new();
+        profile.write_to_vec(&mut content).unwrap();
+        file.write_all(&content).unwrap();
+    };
+
+    println!("Report generated");
+
     actix_web::App::new()
         .app_data(json_cfg)
         .wrap(ErrorHandlers::new().handler(
@@ -250,5 +325,7 @@ pub fn get_application_builder(
         .wrap(middleware::default_response_headers())
         .wrap(middleware::RequestId)
         .wrap(cors::cors())
-        .wrap(router_env::tracing_actix_web::TracingLogger::default())
+        //.wrap(router_env::tracing_actix_web::TracingLogger::default())
+        .wrap(RequestTracing::new())
+        .wrap(OpenTelemetryStack::default().metrics())
 }
