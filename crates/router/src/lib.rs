@@ -227,13 +227,19 @@ pub async fn start_server(conf: settings::Settings) -> ApplicationResult<Server>
             errors::ApplicationError::ApiClientError(error.current_context().clone())
         })?,
     );
+
     let state = routes::AppState::new(conf, tx, api_client).await;
     let request_body_limit = server.request_body_limit;
-    let server = actix_web::HttpServer::new(move || mk_app(state.clone(), request_body_limit))
-        .bind((server.host.as_str(), server.port))?
-        .workers(server.workers)
-        .shutdown_timeout(server.shutdown_timeout)
-        .run();
+    let telemetry = OpenTelemetryStack::default();
+    let server = actix_web::HttpServer::new(move || {
+        mk_app(state.clone(), request_body_limit)
+            .wrap(RequestTracing::new())
+            .wrap(telemetry.metrics())
+    })
+    .bind((server.host.as_str(), server.port))?
+    .workers(server.workers)
+    .shutdown_timeout(server.shutdown_timeout)
+    .run();
     tokio::spawn(receiver_for_error(rx, server.handle()));
     Ok(server)
 }
@@ -325,7 +331,5 @@ pub fn get_application_builder(
         .wrap(middleware::default_response_headers())
         .wrap(middleware::RequestId)
         .wrap(cors::cors())
-        //.wrap(router_env::tracing_actix_web::TracingLogger::default())
-        .wrap(RequestTracing::new())
-        .wrap(OpenTelemetryStack::default().metrics())
+    //.wrap(router_env::tracing_actix_web::TracingLogger::default())
 }
