@@ -21,15 +21,12 @@ pub mod services;
 pub mod types;
 pub mod utils;
 
-use std::io::Write;
-
 use actix_web::{
     body::MessageBody,
     dev::{Server, ServerHandle, ServiceFactory, ServiceRequest},
     middleware::ErrorHandlers,
 };
 use http::StatusCode;
-use pprof::protos::Message;
 use routes::AppState;
 use storage_impl::errors::ApplicationResult;
 use tokio::sync::{mpsc, oneshot};
@@ -289,34 +286,6 @@ pub fn get_application_builder(
         .limit(request_body_limit)
         .content_type_required(true)
         .error_handler(utils::error_parser::custom_json_error_handler);
-
-    let _prof_guard = pprof::ProfilerGuardBuilder::default()
-        .frequency(1000)
-        .blocklist(&["libc", "libgcc", "pthread", "vdso"])
-        .build()
-        .unwrap();
-
-    let now = common_utils::date_time::now();
-
-    let file_path = std::env::var("FILE_PATH").unwrap_or("/mnt/reports".to_string());
-
-    if let Ok(report) = _prof_guard.report().build() {
-        let file = std::fs::File::create(format!("{file_path}/flamegraph_{now}.svg")).unwrap();
-        let mut options = pprof::flamegraph::Options::default();
-        options.image_width = Some(2500);
-        report.flamegraph_with_options(file, &mut options).unwrap();
-    };
-
-    if let Ok(report) = _prof_guard.report().build() {
-        let mut file = std::fs::File::create(format!("{file_path}/profile_{now}.pb")).unwrap();
-        let profile = report.pprof().unwrap();
-
-        let mut content = Vec::new();
-        profile.write_to_vec(&mut content).unwrap();
-        file.write_all(&content).unwrap();
-    };
-
-    println!("Report generated");
 
     actix_web::App::new()
         .app_data(json_cfg)

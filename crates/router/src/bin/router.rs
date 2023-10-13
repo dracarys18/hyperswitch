@@ -1,8 +1,10 @@
+use pprof::protos::Message;
 use router::{
     configs::settings::{CmdLineConf, Settings},
     core::errors::{ApplicationError, ApplicationResult},
     logger,
 };
+use std::io::Write;
 
 #[actix_web::main]
 async fn main() -> ApplicationResult<()> {
@@ -42,11 +44,39 @@ async fn main() -> ApplicationResult<()> {
 
     logger::info!("Application started [{:?}] [{:?}]", conf.server, conf.log);
 
+    let _prof_guard = pprof::ProfilerGuardBuilder::default()
+        .frequency(1000)
+        .blocklist(&["libc", "libgcc", "pthread", "vdso"])
+        .build()
+        .unwrap();
+
+    let now = common_utils::date_time::now();
+
+    let file_path = std::env::var("FILE_PATH").unwrap_or("/mnt/reports".to_string());
+
     #[allow(clippy::expect_used)]
     let server = router::start_server(conf)
         .await
         .expect("Failed to create the server");
     let _ = server.await;
+
+    if let Ok(report) = _prof_guard.report().build() {
+        let file = std::fs::File::create(format!("{file_path}/flamegraph_{now}.svg")).unwrap();
+        let mut options = pprof::flamegraph::Options::default();
+        options.image_width = Some(2500);
+        report.flamegraph_with_options(file, &mut options).unwrap();
+    };
+
+    if let Ok(report) = _prof_guard.report().build() {
+        let mut file = std::fs::File::create(format!("{file_path}/profile_{now}.pb")).unwrap();
+        let profile = report.pprof().unwrap();
+
+        let mut content = Vec::new();
+        profile.write_to_vec(&mut content).unwrap();
+        file.write_all(&content).unwrap();
+    };
+
+    println!("Report generated");
 
     Err(ApplicationError::from(std::io::Error::new(
         std::io::ErrorKind::Other,
