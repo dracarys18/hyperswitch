@@ -84,6 +84,8 @@ services:
 
   jaeger:
     image: jaegertracing/all-in-one:1.43.0
+    networks:
+      - router_net
     ports:
       - "16686:16686"
       - "14268:14268"
@@ -118,7 +120,7 @@ services:
 
     environment:
       - CARGO_TARGET_DIR=/cargo_build_cache
-      - JAEGER_ENDPOINT=localhost:6831
+      - JAEGER_ENDPOINT=jaeger:6831
     labels:
       logs: "promtail"
     healthcheck:

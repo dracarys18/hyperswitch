@@ -98,7 +98,7 @@ impl Default for OpenTelemetryStack {
         let tracer = opentelemetry_jaeger::new_agent_pipeline()
             .with_endpoint(std::env::var("JAEGER_ENDPOINT").unwrap_or("localhost:6831".to_string()))
             .with_service_name(app_name.clone())
-            //.with_auto_split_batch(true)
+            .with_auto_split_batch(true)
             .install_batch(opentelemetry::runtime::Tokio)
             .expect("Failed to install OpenTelemetry tracer.");
 
