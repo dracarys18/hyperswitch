@@ -264,6 +264,38 @@ services:
       - "9090"
     restart: unless-stopped
 
+  locust-master:
+    image: locustio/locust
+    ports:
+     - "8089:8089"
+    depends_on:
+      hyperswitch-server:
+        condition: service_healthy
+    volumes:
+      - ./:/mnt/locust
+    command: -f /mnt/locust/locust_home.py --master -H http://locust-master:8089
+    environment:
+      - JTL_API_TOKEN=at-ed78f00c-a43d-48b8-bf2a-b616e53be118
+
+  locust-worker:
+    image: locustio/locust
+    volumes:
+      - ./:/mnt/locust
+    command: -f /mnt/locust/locust_home.py --worker --master-host locust-master
+    environment:
+      - JTL_API_TOKEN=at-ed78f00c-a43d-48b8-bf2a-b616e53be118
+    depends_on:
+      - locust-master
+
+  locust-exporter:
+    image: containersol/locust_exporter
+    ports:
+        - "9646:9646"
+    environment:
+        - LOCUST_EXPORTER_URI=http://locust-master:8089
+    depends_on:
+        - locust-master
+
   tempo:
     image: grafana/tempo:latest
     command: -config.file=/etc/tempo.yaml
