@@ -31,6 +31,8 @@ use routes::AppState;
 use storage_impl::errors::ApplicationResult;
 use tokio::sync::{mpsc, oneshot};
 
+use tracing_subscriber::fmt;
+
 pub use self::env::logger;
 use crate::{
     configs::settings,
@@ -103,9 +105,12 @@ impl Default for OpenTelemetryStack {
             .expect("Failed to install OpenTelemetry tracer.");
 
         let telemetry = tracing_opentelemetry::layer().with_tracer(tracer);
+        let logging_layer = fmt::layer().with_timer(fmt::time::time()).pretty();
 
         #[allow(clippy::expect_used)]
-        let subscriber = tracing_subscriber::Registry::default().with(telemetry);
+        let subscriber = tracing_subscriber::Registry::default()
+            .with(telemetry)
+            .with(logging_layer);
         tracing::subscriber::set_global_default(subscriber)
             .expect("Failed to install `tracing` subscriber.");
 
@@ -300,5 +305,5 @@ pub fn get_application_builder(
         .wrap(middleware::default_response_headers())
         // .wrap(middleware::RequestId)
         .wrap(cors::cors())
-    //.wrap(router_env::tracing_actix_web::TracingLogger::default())
+        .wrap(router_env::tracing_actix_web::TracingLogger::default())
 }

@@ -38,7 +38,6 @@ pub fn setup(
 ) -> TelemetryGuard {
     let mut guards = Vec::new();
 
-    // Setup OpenTelemetry traces and metrics
     // let traces_layer = if config.telemetry.traces_enabled {
     //     setup_tracing_pipeline(&config.telemetry, service_name)
     // } else {
@@ -50,7 +49,7 @@ pub fn setup(
     //     None
     // };
 
-    // Setup file logging
+    // // Setup file logging
     // let file_writer = if config.file.enabled {
     //     let mut path = crate::env::workspace_path();
     //     // Using an absolute path for file log path would replace workspace path with absolute path,
@@ -79,38 +78,38 @@ pub fn setup(
     //     .with(StorageSubscription)
     //     .with(file_writer);
 
-    // Setup console logging
-    if config.console.enabled {
-        let (console_writer, guard) = tracing_appender::non_blocking(std::io::stdout());
-        guards.push(guard);
+    // // Setup console logging
+    // if config.console.enabled {
+    //     let (console_writer, guard) = tracing_appender::non_blocking(std::io::stdout());
+    //     guards.push(guard);
 
-        let console_filter = get_envfilter(
-            config.console.filtering_directive.as_ref(),
-            config::Level(tracing::Level::WARN),
-            config.console.level,
-            &crates_to_filter,
-        );
-        println!("Using console logging filter: {console_filter}");
+    //     let console_filter = get_envfilter(
+    //         config.console.filtering_directive.as_ref(),
+    //         config::Level(tracing::Level::WARN),
+    //         config.console.level,
+    //         &crates_to_filter,
+    //     );
+    //     println!("Using console logging filter: {console_filter}");
 
-        // match config.console.log_format {
-        //     config::LogFormat::Default => {
-        //         // let logging_layer = fmt::layer()
-        //         //     .with_timer(fmt::time::time())
-        //         //     .pretty()
-        //         //     .with_writer(console_writer)
-        //         //     .with_filter(console_filter);
-        //         // subscriber.with(logging_layer).init();
-        //     }
-        //     config::LogFormat::Json => {
-        //         error_stack::Report::set_color_mode(error_stack::fmt::ColorMode::None);
-        //         let logging_layer =
-        //             FormattingLayer::new(service_name, console_writer).with_filter(console_filter);
-        //         // subscriber.with(logging_layer).init();
-        //     }
-        // }
-    } else {
-        // subscriber.init();
-    };
+    //     match config.console.log_format {
+    //         config::LogFormat::Default => {
+    //             let logging_layer = fmt::layer()
+    //                 .with_timer(fmt::time::time())
+    //                 .pretty()
+    //                 .with_writer(console_writer)
+    //                 .with_filter(console_filter);
+    //             subscriber.with(logging_layer).init();
+    //         }
+    //         config::LogFormat::Json => {
+    //             error_stack::Report::set_color_mode(error_stack::fmt::ColorMode::None);
+    //             let logging_layer =
+    //                 FormattingLayer::new(service_name, console_writer).with_filter(console_filter);
+    //             subscriber.with(logging_layer).init();
+    //         }
+    //     }
+    // } else {
+    //     subscriber.init();
+    // };
 
     // Returning the TelemetryGuard for logs to be printed and metrics to be collected until it is
     // dropped
