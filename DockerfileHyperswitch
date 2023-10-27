@@ -1,0 +1,15 @@
+FROM debian:bookworm-slim
+
+RUN apt-get update \
+    && apt-get install -y libpq-dev libssl-dev pkg-config
+
+EXPOSE 8080
+
+RUN mkdir -p /app
+
+COPY ./config/docker_compose.toml /app/docker_compose.toml
+COPY ./target/release/router /app/router
+
+WORKDIR /app
+
+CMD ["./router","-f","./docker_compose.toml"]
