@@ -3,6 +3,7 @@ import random
 import string
 import json
 import concurrent.futures
+import os
 
 url = "http://localhost:8080"
 payment_ids = []
@@ -278,16 +279,32 @@ def payments_confirm(payment_id, api_key):
 
 
 def main():
-    merchant_id = create_merchant_account()
-    api_key = create_api_key(merchant_id)
-    create_merchant_connector_account(merchant_id)
+    try:
+        to_confirm = open('payment_ids.txt', 'r').read().split(",")
+    except Exception:
+        to_confirm = None
 
-    with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
-        arguments = [api_key] * 1000
-        executor.map(payments_create, arguments)
+    if to_confirm:
+        api_key = open('api_key.txt', 'r').read()
+        for payment_id in to_confirm:
+            payments_confirm(payment_id, api_key)
 
-    for payment_id in payment_ids:
-        payments_confirm(payment_id, api_key)
+        os.remove('api_key.txt')
+        os.remove('payment_ids.txt')
+    else:
+        merchant_id = create_merchant_account()
+        api_key = create_api_key(merchant_id)
+        create_merchant_connector_account(merchant_id)
+        with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
+            arguments = [api_key] * 1000
+            executor.map(payments_create, arguments)
+
+        file_text = ",".join(payment_ids)
+        payment_id_dump = open('payment_ids.txt', 'w')
+        api_key_dump = open('api_key.txt', 'w')
+
+        api_key_dump.write(api_key)
+        payment_id_dump.write(file_text)
 
 
 main()
