@@ -73,7 +73,23 @@ def create_merchant_account():
     response = requests.request(
         "POST", acccount_url, headers=headers, data=payload)
 
-    return response.json()["merchant_id"]
+    merchant_id = response.json()["merchant_id"]
+
+    kv_enable_url = f"{url}/accounts/{merchant_id}/kv"
+
+    payload = json.dumps({
+        "kv_enabled": True
+    })
+    headers = {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'api-key': 'test_admin'
+    }
+
+    response = requests.request(
+        "POST", kv_enable_url, headers=headers, data=payload)
+
+    return merchant_id
 
 
 def create_api_key(merchant_id):
