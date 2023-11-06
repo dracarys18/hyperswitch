@@ -390,6 +390,7 @@ pub struct PaymentsCaptureData {
     pub payment_amount: i64,
     pub multiple_capture_data: Option<MultipleCaptureRequestData>,
     pub connector_meta: Option<serde_json::Value>,
+    pub browser_info: Option<BrowserInformation>,
 }
 
 #[allow(dead_code)]
@@ -438,6 +439,7 @@ pub struct PaymentsPreProcessingData {
     pub router_return_url: Option<String>,
     pub webhook_url: Option<String>,
     pub complete_authorize_url: Option<String>,
+    pub surcharge_details: Option<api_models::payment_methods::SurchargeDetailsResponse>,
     pub browser_info: Option<BrowserInformation>,
 }
 
@@ -492,6 +494,7 @@ pub struct PaymentsCancelData {
     pub connector_transaction_id: String,
     pub cancellation_reason: Option<String>,
     pub connector_meta: Option<serde_json::Value>,
+    pub browser_info: Option<BrowserInformation>,
 }
 
 #[derive(Debug, Default, Clone)]
@@ -711,6 +714,7 @@ pub struct RefundsData {
     pub refund_amount: i64,
     /// Arbitrary metadata required for refund
     pub connector_metadata: Option<serde_json::Value>,
+    pub browser_info: Option<BrowserInformation>,
 }
 
 #[derive(Clone, Debug, Default, serde::Serialize, serde::Deserialize)]
@@ -830,10 +834,12 @@ pub struct DefendDisputeResponse {
     pub connector_status: Option<String>,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone, Debug, serde::Serialize)]
 pub struct UploadFileRequestData {
     pub file_key: String,
+    #[serde(skip)]
     pub file: Vec<u8>,
+    #[serde(serialize_with = "crate::utils::custom_serde::display_serialize")]
     pub file_type: mime::Mime,
     pub file_size: i32,
 }
@@ -952,6 +958,11 @@ impl TryFrom<ConnectorAuthType> for AccessTokenRequestData {
                 app_id: api_key,
                 id: Some(key1),
             }),
+            ConnectorAuthType::MultiAuthKey { api_key, key1, .. } => Ok(Self {
+                app_id: api_key,
+                id: Some(key1),
+            }),
+
             _ => Err(errors::ApiErrorResponse::InvalidDataValue {
                 field_name: "connector_account_details",
             }),

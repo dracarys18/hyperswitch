@@ -3,7 +3,7 @@ use std::marker::PhantomData;
 use api_models::enums::FrmSuggestion;
 use async_trait::async_trait;
 use common_utils::ext_traits::{AsyncExt, Encode, ValueExt};
-use data_models::mandates::MandateData;
+use data_models::{mandates::MandateData, payments::payment_attempt::PaymentAttempt};
 use diesel_models::ephemeral_key;
 use error_stack::{self, ResultExt};
 use router_derive::PaymentOperation;
@@ -364,7 +364,7 @@ impl<F: Clone + Send, Ctx: PaymentMethodRetrieve> Domain<F, api::PaymentsRequest
     async fn add_task_to_process_tracker<'a>(
         &'a self,
         _state: &'a AppState,
-        _payment_attempt: &storage::PaymentAttempt,
+        _payment_attempt: &PaymentAttempt,
         _requeue: bool,
         _schedule_time: Option<time::PrimitiveDateTime>,
     ) -> CustomResult<(), errors::ApiErrorResponse> {
@@ -428,6 +428,7 @@ impl<F: Clone, Ctx: PaymentMethodRetrieve>
             .straight_through_algorithm
             .clone();
         let authorized_amount = payment_data.payment_attempt.amount;
+        let merchant_connector_id = payment_data.payment_attempt.merchant_connector_id.clone();
 
         payment_data.payment_attempt = db
             .update_payment_attempt_with_attempt_id(
@@ -440,6 +441,8 @@ impl<F: Clone, Ctx: PaymentMethodRetrieve>
                         true => Some(authorized_amount),
                         false => None,
                     },
+                    updated_by: storage_scheme.to_string(),
+                    merchant_connector_id,
                 },
                 storage_scheme,
             )
@@ -457,6 +460,7 @@ impl<F: Clone, Ctx: PaymentMethodRetrieve>
                     customer_id,
                     shipping_address_id: None,
                     billing_address_id: None,
+                    updated_by: storage_scheme.to_string(),
                 },
                 storage_scheme,
             )
@@ -486,7 +490,11 @@ impl<F: Send + Clone, Ctx: PaymentMethodRetrieve> ValidateRequest<F, api::Paymen
         helpers::validate_customer_details_in_request(request)?;
 
         if let Some(payment_link_object) = &request.payment_link_object {
-            helpers::validate_payment_link_request(payment_link_object, request.confirm)?;
+            helpers::validate_payment_link_request(
+                payment_link_object,
+                request.confirm,
+                request.order_details.clone(),
+            )?;
         }
 
         let given_payment_id = match &request.payment_id {
@@ -530,8 +538,6 @@ impl<F: Send + Clone, Ctx: PaymentMethodRetrieve> ValidateRequest<F, api::Paymen
             )?;
 
             helpers::validate_customer_id_mandatory_cases(
-                request.shipping.is_some(),
-                request.billing.is_some(),
                 request.setup_future_usage.is_some(),
                 &request
                     .customer
@@ -701,7 +707,7 @@ impl PaymentCreate {
             metadata: request.metadata.clone(),
             business_country: request.business_country,
             business_label: request.business_label.clone(),
-            active_attempt_id,
+            active_attempt: data_models::RemoteStorageObject::ForeignID(active_attempt_id),
             order_details,
             amount_captured: None,
             customer_id: None,
@@ -714,12 +720,14 @@ impl PaymentCreate {
             merchant_decision: None,
             payment_link_id,
             payment_confirm_source: None,
+            surcharge_applicable: None,
+            updated_by: merchant_account.storage_scheme.to_string(),
         })
     }
 
     #[instrument(skip_all)]
     pub fn make_connector_response(
-        payment_attempt: &storage::PaymentAttempt,
+        payment_attempt: &PaymentAttempt,
     ) -> storage::ConnectorResponseNew {
         storage::ConnectorResponseNew {
             payment_id: payment_attempt.payment_id.clone(),
@@ -731,6 +739,7 @@ impl PaymentCreate {
             connector_transaction_id: None,
             authentication_data: None,
             encoded_data: None,
+            updated_by: payment_attempt.updated_by.clone(),
         }
     }
 

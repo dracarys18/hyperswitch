@@ -69,6 +69,9 @@ pub enum StripeErrorCode {
     #[error(error_type = StripeErrorType::InvalidRequestError, code = "customer_redacted", message = "Customer has redacted")]
     CustomerRedacted,
 
+    #[error(error_type = StripeErrorType::InvalidRequestError, code = "customer_already_exists", message = "Customer with the given customer_id already exists")]
+    DuplicateCustomer,
+
     #[error(error_type = StripeErrorType::InvalidRequestError, code = "resource_missing", message = "No such refund")]
     RefundNotFound,
 
@@ -236,6 +239,8 @@ pub enum StripeErrorCode {
     PaymentLinkNotFound,
     #[error(error_type = StripeErrorType::HyperswitchError, code = "", message = "Resource Busy. Please try again later")]
     LockTimeout,
+    #[error(error_type = StripeErrorType::InvalidRequestError, code = "", message = "Merchant connector account is configured with invalid {config}")]
+    InvalidConnectorConfiguration { config: String },
     // [#216]: https://github.com/juspay/hyperswitch/issues/216
     // Implement the remaining stripe error codes
 
@@ -587,6 +592,9 @@ impl From<errors::ApiErrorResponse> for StripeErrorCode {
                 Self::PaymentMethodUnactivated
             }
             errors::ApiErrorResponse::ResourceBusy => Self::PaymentMethodUnactivated,
+            errors::ApiErrorResponse::InvalidConnectorConfiguration { config } => {
+                Self::InvalidConnectorConfiguration { config }
+            }
         }
     }
 }
@@ -652,7 +660,9 @@ impl actix_web::ResponseError for StripeErrorCode {
             | Self::FileNotAvailable
             | Self::FileProviderNotSupported
             | Self::CurrencyNotSupported { .. }
-            | Self::PaymentMethodUnactivated => StatusCode::BAD_REQUEST,
+            | Self::DuplicateCustomer
+            | Self::PaymentMethodUnactivated
+            | Self::InvalidConnectorConfiguration { .. } => StatusCode::BAD_REQUEST,
             Self::RefundFailed
             | Self::PayoutFailed
             | Self::PaymentLinkNotFound
@@ -730,6 +740,7 @@ impl ErrorSwitch<StripeErrorCode> for CustomersErrorResponse {
             Self::InternalServerError => SC::InternalServerError,
             Self::MandateActive => SC::MandateActive,
             Self::CustomerNotFound => SC::CustomerNotFound,
+            Self::CustomerAlreadyExists => SC::DuplicateCustomer,
         }
     }
 }

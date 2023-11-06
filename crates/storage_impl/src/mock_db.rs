@@ -2,7 +2,7 @@ use std::sync::Arc;
 
 use data_models::{
     errors::StorageError,
-    payments::{payment_attempt::PaymentAttempt, payment_intent::PaymentIntent},
+    payments::{payment_attempt::PaymentAttempt, PaymentIntent},
 };
 use diesel_models::{self as store};
 use error_stack::ResultExt;
@@ -41,6 +41,7 @@ pub struct MockDb {
     pub business_profiles: Arc<Mutex<Vec<crate::store::business_profile::BusinessProfile>>>,
     pub reverse_lookups: Arc<Mutex<Vec<store::ReverseLookup>>>,
     pub payment_link: Arc<Mutex<Vec<store::payment_link::PaymentLink>>>,
+    pub organizations: Arc<Mutex<Vec<store::organization::Organization>>>,
 }
 
 impl MockDb {
@@ -74,6 +75,7 @@ impl MockDb {
             business_profiles: Default::default(),
             reverse_lookups: Default::default(),
             payment_link: Default::default(),
+            organizations: Default::default(),
         })
     }
 }

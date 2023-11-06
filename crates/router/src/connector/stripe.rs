@@ -216,7 +216,15 @@ impl
                 .error
                 .code
                 .unwrap_or_else(|| consts::NO_ERROR_MESSAGE.to_string()),
-            reason: response.error.message,
+            reason: response.error.message.map(|message| {
+                response
+                    .error
+                    .decline_code
+                    .map(|decline_code| {
+                        format!("message - {}, decline_code - {}", message, decline_code)
+                    })
+                    .unwrap_or(message)
+            }),
         })
     }
 }
@@ -334,7 +342,15 @@ impl
                 .error
                 .code
                 .unwrap_or_else(|| consts::NO_ERROR_MESSAGE.to_string()),
-            reason: response.error.message,
+            reason: response.error.message.map(|message| {
+                response
+                    .error
+                    .decline_code
+                    .map(|decline_code| {
+                        format!("message - {}, decline_code - {}", message, decline_code)
+                    })
+                    .unwrap_or(message)
+            }),
         })
     }
 }
@@ -448,7 +464,15 @@ impl
                 .error
                 .code
                 .unwrap_or_else(|| consts::NO_ERROR_MESSAGE.to_string()),
-            reason: response.error.message,
+            reason: response.error.message.map(|message| {
+                response
+                    .error
+                    .decline_code
+                    .map(|decline_code| {
+                        format!("message - {}, decline_code - {}", message, decline_code)
+                    })
+                    .unwrap_or(message)
+            }),
         })
     }
 }
@@ -570,7 +594,15 @@ impl
                 .error
                 .code
                 .unwrap_or_else(|| consts::NO_ERROR_MESSAGE.to_string()),
-            reason: response.error.message,
+            reason: response.error.message.map(|message| {
+                response
+                    .error
+                    .decline_code
+                    .map(|decline_code| {
+                        format!("message - {}, decline_code - {}", message, decline_code)
+                    })
+                    .unwrap_or(message)
+            }),
         })
     }
 }
@@ -702,7 +734,15 @@ impl
                 .error
                 .code
                 .unwrap_or_else(|| consts::NO_ERROR_MESSAGE.to_string()),
-            reason: response.error.message,
+            reason: response.error.message.map(|message| {
+                response
+                    .error
+                    .decline_code
+                    .map(|decline_code| {
+                        format!("message - {}, decline_code - {}", message, decline_code)
+                    })
+                    .unwrap_or(message)
+            }),
         })
     }
 }
@@ -848,7 +888,15 @@ impl
                 .error
                 .code
                 .unwrap_or_else(|| consts::NO_ERROR_MESSAGE.to_string()),
-            reason: response.error.message,
+            reason: response.error.message.map(|message| {
+                response
+                    .error
+                    .decline_code
+                    .map(|decline_code| {
+                        format!("message - {}, decline_code - {}", message, decline_code)
+                    })
+                    .unwrap_or(message)
+            }),
         })
     }
 }
@@ -959,7 +1007,15 @@ impl
                 .error
                 .code
                 .unwrap_or_else(|| consts::NO_ERROR_MESSAGE.to_string()),
-            reason: response.error.message,
+            reason: response.error.message.map(|message| {
+                response
+                    .error
+                    .decline_code
+                    .map(|decline_code| {
+                        format!("message - {}, decline_code - {}", message, decline_code)
+                    })
+                    .unwrap_or(message)
+            }),
         })
     }
 }
@@ -1105,7 +1161,15 @@ impl
                 .error
                 .code
                 .unwrap_or_else(|| consts::NO_ERROR_MESSAGE.to_string()),
-            reason: response.error.message,
+            reason: response.error.message.map(|message| {
+                response
+                    .error
+                    .decline_code
+                    .map(|decline_code| {
+                        format!("message - {}, decline_code - {}", message, decline_code)
+                    })
+                    .unwrap_or(message)
+            }),
         })
     }
 }
@@ -1214,7 +1278,15 @@ impl services::ConnectorIntegration<api::Execute, types::RefundsData, types::Ref
                 .error
                 .code
                 .unwrap_or_else(|| consts::NO_ERROR_MESSAGE.to_string()),
-            reason: response.error.message,
+            reason: response.error.message.map(|message| {
+                response
+                    .error
+                    .decline_code
+                    .map(|decline_code| {
+                        format!("message - {}, decline_code - {}", message, decline_code)
+                    })
+                    .unwrap_or(message)
+            }),
         })
     }
 }
@@ -1309,7 +1381,15 @@ impl services::ConnectorIntegration<api::RSync, types::RefundsData, types::Refun
                 .error
                 .code
                 .unwrap_or_else(|| consts::NO_ERROR_MESSAGE.to_string()),
-            reason: response.error.message,
+            reason: response.error.message.map(|message| {
+                response
+                    .error
+                    .decline_code
+                    .map(|decline_code| {
+                        format!("message - {}, decline_code - {}", message, decline_code)
+                    })
+                    .unwrap_or(message)
+            }),
         })
     }
 }
@@ -1445,7 +1525,15 @@ impl
                 .error
                 .code
                 .unwrap_or_else(|| consts::NO_ERROR_MESSAGE.to_string()),
-            reason: response.error.message,
+            reason: response.error.message.map(|message| {
+                response
+                    .error
+                    .decline_code
+                    .map(|decline_code| {
+                        format!("message - {}, decline_code - {}", message, decline_code)
+                    })
+                    .unwrap_or(message)
+            }),
         })
     }
 }
@@ -1539,7 +1627,15 @@ impl
                 .error
                 .code
                 .unwrap_or_else(|| consts::NO_ERROR_MESSAGE.to_string()),
-            reason: response.error.message,
+            reason: response.error.message.map(|message| {
+                response
+                    .error
+                    .decline_code
+                    .map(|decline_code| {
+                        format!("message - {}, decline_code - {}", message, decline_code)
+                    })
+                    .unwrap_or(message)
+            }),
         })
     }
 }
@@ -1656,7 +1752,15 @@ impl
                 .error
                 .code
                 .unwrap_or_else(|| consts::NO_ERROR_MESSAGE.to_string()),
-            reason: response.error.message,
+            reason: response.error.message.map(|message| {
+                response
+                    .error
+                    .decline_code
+                    .map(|decline_code| {
+                        format!("message - {}, decline_code - {}", message, decline_code)
+                    })
+                    .unwrap_or(message)
+            }),
         })
     }
 }
@@ -1844,6 +1948,9 @@ impl api::IncomingWebhook for Stripe {
             stripe::WebhookEventType::PaymentIntentSucceed => {
                 api::IncomingWebhookEvent::PaymentIntentSuccess
             }
+            stripe::WebhookEventType::PaymentIntentCanceled => {
+                api::IncomingWebhookEvent::PaymentIntentCancelled
+            }
             stripe::WebhookEventType::ChargeSucceeded => {
                 if let Some(stripe::WebhookPaymentMethodDetails {
                     payment_method:
@@ -1898,7 +2005,6 @@ impl api::IncomingWebhook for Stripe {
             | stripe::WebhookEventType::ChargePending
             | stripe::WebhookEventType::ChargeUpdated
             | stripe::WebhookEventType::ChargeRefunded
-            | stripe::WebhookEventType::PaymentIntentCanceled
             | stripe::WebhookEventType::PaymentIntentCreated
             | stripe::WebhookEventType::PaymentIntentProcessing
             | stripe::WebhookEventType::PaymentIntentAmountCapturableUpdated
@@ -1962,33 +2068,14 @@ impl api::IncomingWebhook for Stripe {
 impl services::ConnectorRedirectResponse for Stripe {
     fn get_flow_type(
         &self,
-        query_params: &str,
+        _query_params: &str,
         _json_payload: Option<serde_json::Value>,
-        _action: services::PaymentAction,
+        action: services::PaymentAction,
     ) -> CustomResult<crate::core::payments::CallConnectorAction, errors::ConnectorError> {
-        let query =
-            serde_urlencoded::from_str::<transformers::StripeRedirectResponse>(query_params)
-                .into_report()
-                .change_context(errors::ConnectorError::ResponseDeserializationFailed)?;
-
-        crate::logger::debug!(stripe_redirect_response=?query);
-
-        Ok(query
-            .redirect_status
-            .map_or(
-                payments::CallConnectorAction::Trigger,
-                |status| match status {
-                    transformers::StripePaymentStatus::Failed
-                    | transformers::StripePaymentStatus::Pending
-                    | transformers::StripePaymentStatus::Succeeded => {
-                        payments::CallConnectorAction::Trigger
-                    }
-                    _ => payments::CallConnectorAction::StatusUpdate {
-                        status: enums::AttemptStatus::from(status),
-                        error_code: None,
-                        error_message: None,
-                    },
-                },
-            ))
+        match action {
+            services::PaymentAction::PSync | services::PaymentAction::CompleteAuthorize => {
+                Ok(payments::CallConnectorAction::Trigger)
+            }
+        }
     }
 }
